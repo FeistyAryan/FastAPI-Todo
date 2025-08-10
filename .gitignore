@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+*.venv
+.venv
+
+# Environment variables
+.env
+
+# Database files (if you were using local SQLite)
+*.sqlite3
+*.db
+
+# IDE / Editor folders
+.vscode/
+.idea/
+
+# Alembic cache
+.alembic_cache/

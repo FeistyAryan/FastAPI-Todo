@@ -1,0 +1,12 @@
+alembic
+asyncpg
+bcrypt==4.0.1
+email-validator
+fastapi
+gunicorn
+passlib[bcrypt]
+pydantic-settings # <-- Add this
+python-jose[cryptography]
+python-multipart
+sqlmodel
+uvicorn
