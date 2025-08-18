@@ -7,8 +7,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_SECRET_KEY: str
     REFRESH_TOKEN_EXPIRE_MINUTES: int
-    REFRESH_SECRET_KEY: str
-    REFRESH_TOKEN_EXPIRE_MINUTES: int
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 

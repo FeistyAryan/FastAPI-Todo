@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import Annotated
 
@@ -6,7 +6,7 @@ from app.api.v1.dependencies import get_current_user
 from app.db import get_session
 from app.schemas.user import UserCreate, UserRead
 from app.models.user import User
-from app.crud.user import create_user as create_user_crud
+from app.services.user_service import user_service
 
 router = APIRouter()
 
@@ -19,8 +19,8 @@ async def register_user(
     user_in: UserCreate
 ):
 
-    user = await create_user_crud(session=session, user_in=user_in)
-    return user
+    return await user_service.register_new_user(session=session, user_in=user_in)
+    
 
 @router.get("/me",
 response_model=UserRead 

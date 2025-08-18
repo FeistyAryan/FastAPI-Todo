@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
+.venv
+venv/
+env/
+ENV/
+*.env
+
+# IDE and Editor Folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Test Artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+pytest-report.html
+
+# Local Config (NEVER include local environment variables in the image)
+.env
+.env.*
+!.env.example
+
+# Build and Distribution Artifacts
+build/
+dist/
+*.egg-info/
+downloads/
+*.log
+
+# Docker
+Dockerfile
+docker-compose.yml

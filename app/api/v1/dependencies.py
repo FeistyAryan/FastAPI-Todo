@@ -9,8 +9,8 @@ from datetime import datetime
 
 from app.core.config import settings
 from app.db import get_session
-from app.crud.user import get_user_by_email
-from app.crud.session import get_session_by_id
+from app.repositories.user_repo import user_repo
+from app.repositories.session_repo import session_repo
 from app.models.user import User
 from app.models.session import Session as SessionModel
 from app.schemas.token import TokenData
@@ -25,12 +25,12 @@ async def get_current_user(session: Annotated[AsyncSession, Depends(get_session)
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.ACCESS_SECRET_KEY, algorithms=[settings.ALGORITHM])
         token_data = TokenData(email=payload.get("sub"))
     except(JWTError, ValidationError):
         raise credential_exception
 
-    user = await get_user_by_email(session=session, email=token_data.email)
+    user = await user_repo.get_by_email(session=session, email=token_data.email)
     if user is None:
         raise credential_exception
 
@@ -57,8 +57,7 @@ async def get_valid_session_model_from_refresh_token(session: Annotated[AsyncSes
     except JWTError:
         raise credentials_exception
 
-    db_session = await get_session_by_id(session=session, id=uuid.UUID(session_id))
-    print("this is the db_session", db_session)
+    db_session = await session_repo.get_session_with_user(session=session, id=uuid.UUID(session_id))
     if not db_session or db_session.expires_at < datetime.utcnow():
         raise credentials_exception
             
