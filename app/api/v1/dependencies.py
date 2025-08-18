@@ -8,7 +8,7 @@ from typing import Annotated
 from datetime import datetime
 
 from app.core.config import settings
-from app.db import get_session
+from app.db import get_db
 from app.repositories.user_repo import user_repo
 from app.repositories.session_repo import session_repo
 from app.models.user import User
@@ -18,7 +18,7 @@ from app.schemas.token import TokenData
 # This tells FastAPI where to look for the token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/auth/login")
 
-async def get_current_user(session: Annotated[AsyncSession, Depends(get_session)], token: Annotated[str, Depends(oauth2_scheme)]) -> User:
+async def get_current_user(db: Annotated[AsyncSession, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]) -> User:
     credential_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -30,7 +30,7 @@ async def get_current_user(session: Annotated[AsyncSession, Depends(get_session)
     except(JWTError, ValidationError):
         raise credential_exception
 
-    user = await user_repo.get_by_email(session=session, email=token_data.email)
+    user = await user_repo.get_by_email(db=db, email=token_data.email)
     if user is None:
         raise credential_exception
 
@@ -39,7 +39,7 @@ async def get_current_user(session: Annotated[AsyncSession, Depends(get_session)
 
     return user
 
-async def get_valid_session_model_from_refresh_token(session: Annotated[AsyncSession, Depends(get_session)], refresh_token: str = Cookie(...)) -> SessionModel:
+async def get_valid_session_model_from_refresh_token(db: Annotated[AsyncSession, Depends(get_db)], refresh_token: str = Cookie(...)) -> SessionModel:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials, please log in again",
@@ -57,8 +57,8 @@ async def get_valid_session_model_from_refresh_token(session: Annotated[AsyncSes
     except JWTError:
         raise credentials_exception
 
-    db_session = await session_repo.get_session_with_user(session=session, id=uuid.UUID(session_id))
-    if not db_session or db_session.expires_at < datetime.utcnow():
+    current_session = await session_repo.get_session_with_user(db=db, id=uuid.UUID(session_id))
+    if not current_session or current_session.expires_at < datetime.utcnow():
         raise credentials_exception
             
-    return db_session
+    return current_session

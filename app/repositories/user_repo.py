@@ -9,7 +9,7 @@ class UserRepo(BaseRepo):
     def __init__(self):
         super().__init__(User)
 
-    async def get_by_email(self, *, session:AsyncSession, email: str) -> User | None:
-        return await self.get_by_field(session=session, field_name="email", value=email)
+    async def get_by_email(self, *, db:AsyncSession, email: str) -> User | None:
+        return await self.get_by_field(db=db, field_name="email", value=email)
 
 user_repo = UserRepo()

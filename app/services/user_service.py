@@ -10,8 +10,8 @@ class UserService:
     def __init__(self):
         self.repo = user_repo
 
-    async def register_new_user(self, *, session: AsyncSession, user_in: UserCreate) -> User:
-        existing_user = await self.repo.get_by_email(session=session, email=user_in.email)
+    async def register_new_user(self, *, db: AsyncSession, user_in: UserCreate) -> User:
+        existing_user = await self.repo.get_by_email(db=db, email=user_in.email)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -21,6 +21,6 @@ class UserService:
         user_data = user_in.model_dump(include={"email"})
         user_data["hashed_password"] = get_password_hash(user_in.password)
 
-        return await self.repo.create(session=session, obj_in=user_data)
+        return await self.repo.create(db=db, obj_in=user_data)
 
 user_service = UserService()
