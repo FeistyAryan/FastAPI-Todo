@@ -7,6 +7,7 @@ from app.repositories.session_repo import session_repo
 from app.core.security import verify_password, create_access_token, create_refresh_token
 from app.core.config import settings
 from app.models.session import Session as SessionModel
+from app.core.exceptions.user import InvalidCredentialsException
 
 class AuthService:
     def __init__(self):
@@ -26,10 +27,7 @@ class AuthService:
     async def login(self, *, db: AsyncSession, request: Request, email: str, password: str) -> tuple[str, str]:
         user = await self.user_repo.get_by_email(db=db, email=email)
         if not user or not verify_password(password, user.hashed_password):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password"
-            )
+            raise InvalidCredentialsException()
         
         session_data = self._prepare_session_data(user_id=user.id, request=request)
         new_session = await self.session_repo.create(db=db, obj_in=session_data)

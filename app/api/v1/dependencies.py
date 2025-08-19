@@ -14,51 +14,40 @@ from app.repositories.session_repo import session_repo
 from app.models.user import User
 from app.models.session import Session as SessionModel
 from app.schemas.token import TokenData
+from app.core.exceptions.user import InvalidCredentialsException
+from app.core.exceptions.session import InvalidSessionException
 
 # This tells FastAPI where to look for the token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/auth/login")
 
 async def get_current_user(db: Annotated[AsyncSession, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]) -> User:
-    credential_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
         payload = jwt.decode(token, settings.ACCESS_SECRET_KEY, algorithms=[settings.ALGORITHM])
         token_data = TokenData(email=payload.get("sub"))
     except(JWTError, ValidationError):
-        raise credential_exception
+        raise InvalidCredentialsException()
 
     user = await user_repo.get_by_email(db=db, email=token_data.email)
     if user is None:
-        raise credential_exception
-
-    if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive User")
+        raise InvalidCredentialsException()
 
     return user
 
 async def get_valid_session_model_from_refresh_token(db: Annotated[AsyncSession, Depends(get_db)], refresh_token: str = Cookie(...)) -> SessionModel:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials, please log in again",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     if not refresh_token:
-        raise credentials_exception
+        raise InvalidSessionException()
 
     try:
         payload = jwt.decode(refresh_token, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM])
         session_id = payload.get("jti")
         if not session_id:
-            raise credentials_exception
+            raise InvalidSessionException()
 
     except JWTError:
-        raise credentials_exception
+        raise InvalidSessionException()
 
     current_session = await session_repo.get_session_with_user(db=db, id=uuid.UUID(session_id))
     if not current_session or current_session.expires_at < datetime.utcnow():
-        raise credentials_exception
+        raise InvalidSessionException()
             
     return current_session
