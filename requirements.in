@@ -9,4 +9,5 @@ pydantic-settings # <-- Add this
 python-jose[cryptography]
 python-multipart
 sqlmodel
+structlog
 uvicorn
