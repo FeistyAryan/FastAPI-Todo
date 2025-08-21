@@ -1,6 +1,7 @@
 # in app/main.py
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.v1.api import api_router
 from app.core.exceptions.base import CustomException
@@ -14,6 +15,8 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(title="Production Grade FastAPI", lifespan=lifespan)
+
+Instrumentator().instrument(app).expose(app)
 
 app.add_middleware(CorrelationIDMiddleware)
 app.add_exception_handler(Exception, generic_exception_handler)

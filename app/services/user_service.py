@@ -24,6 +24,7 @@ class UserService:
 
         try:
             new_user = await self.repo.create(db=db, obj_in=user_data)
+            log.info("New user registered", email=new_user.email, request_id=str(request_id_var.get()))
             return new_user
 
         except IntegrityError:

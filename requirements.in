@@ -5,7 +5,8 @@ email-validator
 fastapi
 gunicorn
 passlib[bcrypt]
-pydantic-settings # <-- Add this
+prometheus-fastapi-instrumentator
+pydantic-settings 
 python-jose[cryptography]
 python-multipart
 sqlmodel
