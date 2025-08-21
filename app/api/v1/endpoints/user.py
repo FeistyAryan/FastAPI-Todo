@@ -4,9 +4,11 @@ from typing import Annotated
 
 from app.api.v1.dependencies import get_current_user
 from app.db import get_db
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, ForgotPassword
 from app.models.user import User
 from app.services.user_service import user_service
+from app.core.context import request_id_var
+from app.core.messaging import publish_message
 
 router = APIRouter()
 
@@ -29,3 +31,12 @@ async def read_current_user(
     current_user: Annotated[User, Depends(get_current_user)]
 ):
     return current_user
+
+@router.post("/forget-password")
+async def forgot_password(*, user_in: ForgotPassword):
+    message={
+        "email": user_in.email,
+        "requested_id": str(request_id_var.get())
+    }
+    await publish_message(queue_name="password_reset_queue", message_body=message)
+    return {"message": "If an account with this email exists, a password reset link will be sent."}

@@ -9,3 +9,6 @@ class UserRead(SQLModel):
     id: int
     email: EmailStr
     is_active: bool
+
+class ForgotPassword(SQLModel):
+    email: EmailStr
