@@ -8,7 +8,7 @@ from app.schemas.user import UserCreate, UserRead, ForgotPassword
 from app.models.user import User
 from app.services.user_service import user_service
 from app.core.context import request_id_var
-from app.core.messaging import publish_message
+from app.core.rabbitmq import rabbitmq_manager
 
 router = APIRouter()
 
@@ -34,9 +34,5 @@ async def read_current_user(
 
 @router.post("/forget-password")
 async def forgot_password(*, user_in: ForgotPassword):
-    message={
-        "email": user_in.email,
-        "requested_id": str(request_id_var.get())
-    }
-    await publish_message(queue_name="password_reset_queue", message_body=message)
+    await user_service.request_password_reset(email=user_in.email)
     return {"message": "If an account with this email exists, a password reset link will be sent."}

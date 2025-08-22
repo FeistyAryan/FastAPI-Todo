@@ -8,11 +8,14 @@ from app.core.exceptions.base import CustomException
 from app.core.exceptions.handlers import custom_exception_handler, generic_exception_handler
 from app.core.middlewares.correlation import CorrelationIDMiddleware
 from app.core.logging_config import setup_logging
+from app.core.rabbitmq import rabbitmq_manager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     setup_logging()
+    await rabbitmq_manager._get_connection()
     yield
+    await rabbitmq_manager.close()
 
 app = FastAPI(title="Production Grade FastAPI", lifespan=lifespan)
 

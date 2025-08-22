@@ -1,8 +1,10 @@
 import asyncio
-import aio_pika
 import json
 import structlog
+
+form app.core.rabbitmq import rabbitmq_manager
 from app.core.context import request_id_var
+from aio_pika.abc import AbstractIncomingMessage
 
 log = structlog.get_logger()
 
@@ -29,21 +31,16 @@ async def on_message(message: aio_pika.abc.AbstractIncomingMessage):
 
 
 async def main():
-    while True:
-        try:
-            connection = await aio_pika.connect_robust(host='rabbitmq')
-            break
-        except ConnectionError:
-            log.info("RabbitMQ not ready yet, waiting...", request_id=str(request_id_var.get()))
-            await asyncio.sleep(5)
+    channel = await rabbitmq_manager.get_channel()
+    await channel.set_qos(prefetch_count=1)
+    queue = await channel.declare_queue("password_reset_queue", durable=True)
     
-    async with connection:
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue("password_reset_queue", durable=True)
-        log.info("Worker is waiting for messages...")
-        await queue.consume(on_message)
+    log.info("Worker is waiting for messages...")
+    await queue.consume(on_message)
+    try:
         await asyncio.Future()
+    finally:
+        await rabbitmq_manager.close()
 
 if __name__ == '__main__':
     asyncio.run(main())
