@@ -2,7 +2,7 @@ import asyncio
 import json
 import structlog
 
-form app.core.rabbitmq import rabbitmq_manager
+from app.core.rabbitmq import rabbitmq_manager
 from app.core.context import request_id_var
 from aio_pika.abc import AbstractIncomingMessage
 

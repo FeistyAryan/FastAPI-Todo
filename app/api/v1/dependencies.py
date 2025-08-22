@@ -13,9 +13,9 @@ from app.repositories.user_repo import user_repo
 from app.repositories.session_repo import session_repo
 from app.models.user import User
 from app.models.session import Session as SessionModel
-from app.schemas.token import TokenData
 from app.core.exceptions.user import InvalidCredentialsException
 from app.core.exceptions.session import InvalidSessionException
+from app.core.jwt_denylist import is_jti_denylisted
 
 # This tells FastAPI where to look for the token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/auth/login")
@@ -23,11 +23,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"/api/v1/auth/login")
 async def get_current_user(db: Annotated[AsyncSession, Depends(get_db)], token: Annotated[str, Depends(oauth2_scheme)]) -> User:
     try:
         payload = jwt.decode(token, settings.ACCESS_SECRET_KEY, algorithms=[settings.ALGORITHM])
-        token_data = TokenData(email=payload.get("sub"))
+        jti = payload.get("jti")
+        if not jti or await is_jti_denylisted(jti):
+            raise InvalidCredentialsException()
+
+        email = payload.get("sub")
     except(JWTError, ValidationError):
         raise InvalidCredentialsException()
 
-    user = await user_repo.get_by_email(db=db, email=token_data.email)
+    user = await user_repo.get_by_email(db=db, email=email)
     if user is None:
         raise InvalidCredentialsException()
 
