@@ -10,6 +10,7 @@ prometheus-fastapi-instrumentator
 pydantic-settings 
 python-jose[cryptography]
 python-multipart
+redis
 sqlmodel
 structlog
 uvicorn

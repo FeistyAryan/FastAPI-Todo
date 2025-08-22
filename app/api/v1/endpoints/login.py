@@ -5,7 +5,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.db import get_db
 from app.services.auth_service import auth_service
-from app.api.v1.dependencies import get_valid_session_model_from_refresh_token
+from app.api.v1.dependencies import get_valid_session_model_from_refresh_token, oauth2_scheme
 from app.models.session import Session as SessionModel
 from app.schemas.token import Token
 
@@ -57,8 +57,9 @@ async def refresh_access_token(
 async def logout(
     response: Response,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_session: Annotated[SessionModel, Depends(get_valid_session_model_from_refresh_token)]
+    current_session: Annotated[SessionModel, Depends(get_valid_session_model_from_refresh_token)],
+    access_token: Annotated[str, Depends(oauth2_scheme)]
 ):
-    await auth_service.logout(db=db, session_to_delete=current_session)
+    await auth_service.logout(db=db, session_to_delete=current_session, access_token=access_token)
     response.delete_cookie(key="refresh_token", path = "/")
     return Response(status_code=204)
