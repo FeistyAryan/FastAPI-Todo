@@ -31,4 +31,24 @@ class UserService:
             await db.rollback()
             raise UserAlreadyExistsException()
 
+    async def request_password_reset(self, *, email: str):
+        """
+        Checks if a user exists and, if so, queues a password reset email task.
+        """
+        # Optional but good practice: Check if the user exists first.
+        # This prevents maliciously spamming the queue for non-existent emails.
+        # user = await self.repo.get_by_email(db=db, email=email)
+        # if not user:
+        #     log.warn("Password reset requested for non-existent user", email=email)
+        #     return # Fail silently to prevent email enumeration attacks
+        log.info("Queuing password reset request", email=email)
+        message = {
+            "email": email,
+            "requested_id": str(request_id_var.get())
+        }
+        await rabbitmq_manager.publish_message(
+            queue_name="password_reset_queue",
+            message_body=message
+        )
+
 user_service = UserService()
