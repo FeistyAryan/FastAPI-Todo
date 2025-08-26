@@ -5,6 +5,7 @@ from app.models.base import TimestampModel
 
 if TYPE_CHECKING:
     from app.models.session import Session
+    from app.models.password_reset_token import PasswordResetToken
 
 class User(TimestampModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -13,3 +14,4 @@ class User(TimestampModel, table=True):
     is_active: bool = True
 
     sessions: list["Session"] = Relationship(back_populates="user")
+    password_reset_tokens: list["PasswordResetToken"] = Relationship(back_populates="user")

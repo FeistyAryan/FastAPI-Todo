@@ -1,14 +1,17 @@
 import asyncio
 import json
 import structlog
+from aio_pika.abc import AbstractIncomingMessage
 
 from app.core.rabbitmq import rabbitmq_manager
 from app.core.context import request_id_var
-from aio_pika.abc import AbstractIncomingMessage
+from app.db import get_db
+from app.services.user_service import user_service
+from app.services.email_service import email_service
 
 log = structlog.get_logger()
 
-async def on_message(message: aio_pika.abc.AbstractIncomingMessage):
+async def on_message(message: AbstractIncomingMessage):
     async with message.process():
         body = message.body.decode()
         try:
@@ -20,7 +23,12 @@ async def on_message(message: aio_pika.abc.AbstractIncomingMessage):
                     email=email,
                     request_id=request_id
             )
-            await asyncio.sleep(2) # Simulate sending email
+            async for db in get_db():
+                raw_token = await user_service.start_password_reset(db=db, email=email)
+                if raw_token:
+                    await email_service.send_password_reset_email(email_to=email, reset_token=raw_token)
+            
+
             log.info(
                 "Password reset email sent (simulated)",
                 email=email,

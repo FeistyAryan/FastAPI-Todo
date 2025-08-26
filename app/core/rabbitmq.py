@@ -34,7 +34,7 @@ class RabbitMQManager:
 
     async def get_channel(self):
         if self._channel is None or self._channel.is_closed:
-            connection = self._get_connection()
+            connection = await self._get_connection()
             self._channel = await connection.channel()
         return self._channel
 
