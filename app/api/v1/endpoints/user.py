@@ -4,7 +4,7 @@ from typing import Annotated
 
 from app.api.v1.dependencies import get_current_user
 from app.db import get_db
-from app.schemas.user import UserCreate, UserRead, ForgotPassword
+from app.schemas.user import UserCreate, UserRead, ForgotPassword, ResetPassword
 from app.models.user import User
 from app.services.user_service import user_service
 from app.core.context import request_id_var
@@ -33,6 +33,19 @@ async def read_current_user(
     return current_user
 
 @router.post("/forget-password")
-async def forgot_password(*, user_in: ForgotPassword):
-    await user_service.request_password_reset(email=user_in.email)
+async def forgot_password(
+    *, 
+    db: Annotated[AsyncSession, Depends(get_db)], 
+    user_in: ForgotPassword
+):
+    await user_service.start_password_reset(db=db,email=user_in.email)
     return {"message": "If an account with this email exists, a password reset link will be sent."}
+
+@router.post("/reset-password")
+async def reset_password(
+    *,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    payload: ResetPassword
+):
+    await user_service.reset_password(db=db, payload=payload)
+    return {"message": "Your password has been reset successfully."}

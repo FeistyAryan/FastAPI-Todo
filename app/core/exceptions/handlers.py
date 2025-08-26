@@ -31,7 +31,6 @@ async def custom_exception_handler(request: Request, exc: CustomException):
 
     elif isinstance(exc, (InvalidCredentialsException, InvalidSessionException)):
         status_code = HTTP_401_UNAUTHORIZED
-        detail = "Could not validate credentials, please log in again."
         headers = {"WWW-Authenticate": "Bearer"}
         log.warn("authentication_failed", exception=exc.__class__.__name__, request_id=str(request_id_var.get()))
     

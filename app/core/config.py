@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     REFRESH_SECRET_KEY: str
     REFRESH_TOKEN_EXPIRE_MINUTES: int
     REDIS_URL: str
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int
 
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 

@@ -10,4 +10,5 @@ class UserNotFoundException(UserException):
     pass
 
 class InvalidCredentialsException(UserException):
-    pass
+    def __init__(self, detail: str = "Could not validate credentials, please log in again."):
+        self.detail = detail

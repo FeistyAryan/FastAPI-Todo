@@ -12,3 +12,7 @@ class UserRead(SQLModel):
 
 class ForgotPassword(SQLModel):
     email: EmailStr
+
+class ResetPassword(SQLModel):
+    token: str
+    new_password: str
