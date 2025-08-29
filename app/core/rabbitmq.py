@@ -42,7 +42,7 @@ class RabbitMQManager:
         try:
             channel = await self.get_channel()
             queue = await channel.declare_queue(queue_name, durable=True)
-            await channel.default.exchange_publish(
+            await channel.default_exchange.publish(
                 aio_pika.Message(
                     body=json.dumps(message_body).encode(),
                     delivery_mode=aio_pika.DeliveryMode.PERSISTENT

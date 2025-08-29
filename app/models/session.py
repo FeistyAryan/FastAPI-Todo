@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from app.models.base import TimestampModel
 
 if TYPE_CHECKING:
-    from app.model.user import User
+    from app.models.user import User
 
 class Session(TimestampModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
