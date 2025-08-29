@@ -14,6 +14,7 @@ from app.core.context import request_id_var
 from app.core.security import get_password_hash
 from app.core.exceptions.user import UserAlreadyExistsException, UserNotFoundException
 from app.core.config import settings
+from app.core.rabbitmq import rabbitmq_manager
 
 log = structlog.get_logger()
 
@@ -37,8 +38,16 @@ class UserService:
             await db.rollback()
             raise UserAlreadyExistsException()
 
-    async def start_password_reset(self, *, db: AsyncSession, email: str):
+    async def request_password_reset(self, *, email:str):
         log.info("Password reset requested", email=email, request_id=str(request_id_var.get()))
+        message_body = {
+            "email": email,
+            "request_id": str(request_id_var.get())
+        }
+        await rabbitmq_manager.publish_message("password_reset_queue", message_body)
+
+    async def process_password_reset(self, *, db: AsyncSession, email: str):
+        log.info("Processing password reset for worker", email=email, request_id=str(request_id_var.get()))
         user = await self.repo.get_by_email(db=db, email=email)
         if not user:
             raise UserNotFoundException()
@@ -52,7 +61,7 @@ class UserService:
             "user_id": user.id
         }
         await self.password_reset_token_repo.create(db=db, obj_in=token_data)
-        return raw_token
+        return user.email, raw_token
 
     async def reset_password(self, *, db: AsyncSession, payload: ResetPassword):
         token_hash = hashlib.sha256(payload.token.encode()).hexdigest()

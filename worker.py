@@ -3,6 +3,10 @@ import json
 import structlog
 from aio_pika.abc import AbstractIncomingMessage
 
+from app.models.user import User
+from app.models.session import Session
+from app.models.password_reset_token import PasswordResetToken
+
 from app.core.rabbitmq import rabbitmq_manager
 from app.core.context import request_id_var
 from app.db import get_db
@@ -18,24 +22,24 @@ async def on_message(message: AbstractIncomingMessage):
             data = json.loads(body)
             request_id = data.get("request_id", "N/A")
             email = data.get("email")
+            request_id_var.set(request_id)  #set contextvar for logging as worker is operating from a different container
             log.info(
                     "Received password reset request",
                     email=email,
                     request_id=request_id
             )
             async for db in get_db():
-                raw_token = await user_service.start_password_reset(db=db, email=email)
-                if raw_token:
-                    await email_service.send_password_reset_email(email_to=email, reset_token=raw_token)
-            
+                result = await user_service.process_password_reset(db=db, email=email)
 
-            log.info(
-                "Password reset email sent (simulated)",
-                email=email,
-                request_id=request_id
-            )
+                if result:
+                    email_to, raw_token = result
+                    await email_service.send_password_reset_email(email_to=email_to, reset_token=raw_token)
+                    log.info("Password reset email sent", email=email_to, request_id=request_id)
+
         except json.JSONDecodeError:
             log.error("Failed to decode message body", body=body)
+        except Exception as e:
+            log.exception("Unhandled error in worker", exc_info=e)
 
 
 async def main():
