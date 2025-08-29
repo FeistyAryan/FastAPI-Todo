@@ -1,69 +1,86 @@
-# Multi-Device To-Do App Backend
+# Production-Grade Microservice & Worker Architecture with FastAPI
 
-A robust, production-grade backend for a To-Do application, featuring a secure, multi-device authentication system using FastAPI. This project demonstrates a clean, layered architecture and modern development best practices.
+This repository is a showcase of a robust, scalable, and observable backend system engineered for high performance and resilience. It moves beyond a simple CRUD application to demonstrate a complete, production-ready architecture featuring decoupled services, asynchronous task processing, and a comprehensive observability stack.
 
-## Features
+<br />
 
-* **Secure User Authentication:** JWT-based authentication with `HttpOnly` Refresh Token Rotation for enhanced security.
-* **Multi-Device Session Management:** Users can be logged in on multiple devices, with the ability to log out from a specific session.
-* **Layered Architecture:** A clean separation of concerns between the API, business logic, and data access layers.
-* **Asynchronous from the Ground Up:** Built with `async` and `await` using `asyncpg` for high performance.
-* **Database Migrations:** Alembic for safe and version-controlled schema management.
-* **Containerized:** Fully containerized with Docker and Docker Compose for easy setup and deployment.
+
+*A high-level overview of the service architecture, showcasing the flow of requests from the user to the API, and the decoupled communication with the worker via the message broker.*
 
 ---
-## Architecture & Design Patterns
 
-This project is built using a **Layered (N-Tier) Architecture** to ensure a clean separation of concerns, making the application scalable, maintainable, and easy to test.
+## Core Features & Technical Highlights
 
+This system is built with a focus on best practices for modern web services.
 
+### Security
+- **Robust Authentication**: Implements a secure JWT-based authentication system featuring **`HttpOnly` Refresh Token Rotation** to mitigate XSS attacks and provide secure, long-lived user sessions.
+- **Secure Logout**: Utilizes a **Redis-based JWT Denylist** to immediately invalidate tokens upon logout, ensuring they cannot be reused even if they haven't expired.
+- **Resilient Password Reset**: A secure, asynchronous password reset workflow that invalidates previous tokens upon new requests to minimize the attack surface.
 
-* **1. API Layer (`/api`)**: The outermost layer, responsible for handling HTTP requests and responses. It defines the API endpoints and handles request validation using FastAPI's Pydantic integration. It knows nothing about business logic or the database.
+### Architecture & Design
+- **Decoupled Service Architecture**: The system is split into two primary services: a synchronous **API service** for handling user requests and an asynchronous **Worker service** for processing background tasks, ensuring the API remains fast and responsive.
+- **Message-Driven Communication**: Leverages **RabbitMQ** as a message broker to facilitate reliable, asynchronous communication between the API and the worker, implementing the **Producer-Consumer** pattern for background job processing.
+- **Layered (N-Tier) Architecture**: Enforces a strict separation of concerns through a well-defined layered architecture (**API Layer**, **Service Layer**, **Repository Layer**), making the codebase modular, testable, and maintainable.
+- **Repository Design Pattern**: Abstracts data access logic, isolating the business layer from the database implementation and ensuring a consistent data access API.
 
-* **2. Service Layer (`/services`)**: The "brains" of the application. This layer contains all the business logic and orchestrates the application's use cases (e.g., "registering a new user" involves checking for duplicates, hashing a password, and creating a user record). It is completely independent of the web framework.
-
-* **3. Repository Layer (`/repositories`)**: This layer implements the **Repository Pattern**, abstracting the data source. Its only job is to perform direct database operations (CRUD - Create, Read, Update, Delete). This isolates our business logic from the specifics of the database, making it easy to change or mock for testing.
-
-We also leverage **Dependency Injection** by creating singleton instances of our service and repository classes, which are then used throughout the application. This promotes loose coupling and makes the codebase easier to manage.
+### Observability
+- **Structured Logging**: Implements `structlog` to produce machine-readable **JSON logs**, enabling powerful querying and analysis in centralized logging platforms.
+- **End-to-End Request Tracing**: Utilizes **Correlation IDs** to trace a single user request across the entire system—from the initial API call, through the message queue, to the final processing in the worker—simplifying debugging in a distributed environment.
+- **Real-time Monitoring**: Integrated with **Prometheus** for metrics collection and **Grafana** for real-time performance monitoring dashboards, providing crucial insights into API latency, error rates, and system health.
 
 ---
+
 ## Tech Stack
 
-- **Framework:** FastAPI
-- **Database:** PostgreSQL (with Alembic for migrations)
-- **ORM / Data Validation:** SQLModel (built on Pydantic & SQLAlchemy)
-- **Authentication:** JWT with `HttpOnly` Refresh Token Rotation
-- **Async Driver:** `asyncpg`
-- **Infrastructure:** Docker & Docker Compose
-- **Dependency Management:** `pip-tools` (or Poetry)
+| Category              | Technology                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Backend Framework** | FastAPI                                                                                                     |
+| **Database** | PostgreSQL                                                                                                  |
+| **ORM & Validation** | SQLModel (Pydantic + SQLAlchemy)                                                                            |
+| **Migrations** | Alembic                                                                                                     |
+| **Message Broker** | RabbitMQ                                                                                                    |
+| **In-Memory Cache** | Redis                                                                                                       |
+| **Observability** | Prometheus, Grafana                                                                                         |
+| **Containerization** | Docker, Docker Compose                                                                                      |
+| **Async Driver** | `asyncpg`                                                                                                   |
+| **Logging** | `structlog`                                                                                                 |
 
 ---
 
-
-## Getting Started
+## Local Development
 
 ### Prerequisites
 - Docker and Docker Compose must be installed on your system.
 
-1.  **Clone the repository**
-```bash
-git clone <your-repo-url>
-cd fastapi-app
-```
+### Running the Application
+1.  **Clone the Repository**
+    ```bash
+    git clone <your-repo-url>
+    cd <repository-folder>
+    ```
 
-2.  **Create the environment file:**
-    Copy the example file and fill in your own secret values.
+2.  **Configure Environment Variables**
+    Create a `.env` file from the example template and populate it with your own secret keys and configuration values.
     ```bash
     cp .env.example .env
     ```
 
-3.  **Build and run the application:**
+3.  **Launch the System**
+    Build and run the entire stack using Docker Compose. The `--build` flag is only necessary on the first run or after changing dependencies.
     ```bash
     docker compose up --build
     ```
 
-4.  **API Documentation**
+---
 
-    Once the application is running, the interactive API documentation (provided by Swagger UI) is available at:
+## Exploring the Running System
 
-    [**http://localhost:8000/docs**](http://localhost:8000/docs)
+Once the `docker compose up` command completes, the following services will be available:
+
+| Service                   | URL                                     | Credentials      |
+| ------------------------- | --------------------------------------- | ---------------- |
+| **API Docs (Swagger UI)** | http://localhost:8000/docs              | -                |
+| **Grafana Dashboard** | http://localhost:3000                   | `admin` / `admin` |
+| **Prometheus Metrics** | http://localhost:9090                   | -                |
+| **RabbitMQ Management** | http://localhost:15672                  | `guest` / `guest` |
