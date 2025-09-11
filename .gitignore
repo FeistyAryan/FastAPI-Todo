@@ -22,3 +22,6 @@ venv/
 
 # Alembic cache
 .alembic_cache/
+
+# Kiro specs
+.kiro/

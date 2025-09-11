@@ -28,7 +28,7 @@ class RabbitMQManager:
                         raise
         return self._connection
 
-    def _handle_connection_close(self):
+    def _handle_connection_close(self, exc=None):
         log.warn("RabbitMQ connection closed. It will be re-established on next use.", exc_info=exc)
         self._connection = None
 

@@ -12,6 +12,8 @@ from sqlmodel import SQLModel
 from app.models.user import User
 from app.models.session import Session
 from app.models.password_reset_token import PasswordResetToken
+from app.models.wardrobe import ClothingItem, Outfit, ShoppingRecommendation
+from app.models.conversation import Conversation, ConversationMessage
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
