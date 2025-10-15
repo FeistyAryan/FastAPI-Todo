@@ -1,4 +1,4 @@
-# Production-Grade Microservice & Worker Architecture with FastAPI
+# Production-Grade Distributed System & Worker Architecture with FastAPI
 
 This repository is a showcase of a robust, scalable, and observable backend system engineered for high performance and resilience. It moves beyond a simple CRUD application to demonstrate a complete, production-ready architecture featuring decoupled services, asynchronous task processing, and a comprehensive observability stack.
 
