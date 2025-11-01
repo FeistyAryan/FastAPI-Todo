@@ -56,8 +56,8 @@ This system is built with a focus on best practices for modern web services.
 ### Running the Application
 1.  **Clone the Repository**
     ```bash
-    git clone https://github.com/FeistyAryan/FastAPI-Todo.git
-    cd FastAPI-Todo
+    git clone https://github.com/FeistyAryan/fastapi-app.git
+    cd fastapi-app
     ```
 
 2.  **Configure Environment Variables**
